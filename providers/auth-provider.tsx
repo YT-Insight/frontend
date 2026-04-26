@@ -1,18 +1,24 @@
 "use client";
 
 import { useEffect } from "react";
-import { api } from "@/lib/api";
-import { tokenStorage } from "@/lib/api";
+import { useAuth as useClerkAuth } from "@clerk/nextjs";
+import { api, initApiAuth } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import type { MeResponse } from "@/types/api";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { getToken, isSignedIn, isLoaded } = useClerkAuth();
   const setAuth = useAuthStore((s) => s.setAuth);
   const clearAuth = useAuthStore((s) => s.clearAuth);
 
   useEffect(() => {
-    const token = tokenStorage.getAccess();
-    if (!token) {
+    initApiAuth(() => getToken());
+  }, [getToken]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
       clearAuth();
       return;
     }
@@ -20,11 +26,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     api
       .get<MeResponse>("/api/auth/me/")
       .then((data) => setAuth(data.user, data.subscription, data.usage))
-      .catch(() => {
-        tokenStorage.clear();
-        clearAuth();
-      });
-  }, [setAuth, clearAuth]);
+      .catch(() => clearAuth());
+  }, [isSignedIn, isLoaded, setAuth, clearAuth]);
 
   return <>{children}</>;
 }

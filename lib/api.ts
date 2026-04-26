@@ -2,57 +2,10 @@ import type { ApiError } from "@/types/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-const ACCESS_KEY = "yt_access";
-const REFRESH_KEY = "yt_refresh";
-const AUTH_COOKIE = "yt_auth";
+let _getToken: (() => Promise<string | null>) | null = null;
 
-export const tokenStorage = {
-  getAccess(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem(ACCESS_KEY);
-  },
-  getRefresh(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem(REFRESH_KEY);
-  },
-  set(access: string, refresh: string) {
-    localStorage.setItem(ACCESS_KEY, access);
-    localStorage.setItem(REFRESH_KEY, refresh);
-    document.cookie = `${AUTH_COOKIE}=1; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
-  },
-  clear() {
-    localStorage.removeItem(ACCESS_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-    document.cookie = `${AUTH_COOKIE}=; path=/; max-age=0`;
-  },
-};
-
-let isRefreshing = false;
-let pendingRefresh: Promise<string> | null = null;
-
-async function refreshAccessToken(): Promise<string> {
-  const refresh = tokenStorage.getRefresh();
-  if (!refresh) {
-    tokenStorage.clear();
-    throw new Error("No refresh token");
-  }
-
-  const res = await fetch(`${API_BASE}/api/auth/token/refresh/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh }),
-  });
-
-  if (!res.ok) {
-    tokenStorage.clear();
-    window.location.href = "/login";
-    throw new Error("Session expired");
-  }
-
-  const data = await res.json();
-  // ROTATE_REFRESH_TOKENS=True — Django returns both tokens
-  tokenStorage.set(data.access, data.refresh ?? refresh);
-  return data.access;
+export function initApiAuth(getter: () => Promise<string | null>) {
+  _getToken = getter;
 }
 
 export class ApiRequestError extends Error {
@@ -65,12 +18,8 @@ export class ApiRequestError extends Error {
   }
 }
 
-async function apiFetch<T>(
-  path: string,
-  options: RequestInit = {},
-  isRetry = false
-): Promise<T> {
-  const token = tokenStorage.getAccess();
+async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = _getToken ? await _getToken() : null;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -79,26 +28,6 @@ async function apiFetch<T>(
   };
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-
-  if (res.status === 401 && !isRetry) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      pendingRefresh = refreshAccessToken().finally(() => {
-        isRefreshing = false;
-        pendingRefresh = null;
-      });
-    }
-
-    const newToken = await pendingRefresh!;
-    return apiFetch<T>(
-      path,
-      {
-        ...options,
-        headers: { ...headers, Authorization: `Bearer ${newToken}` },
-      },
-      true
-    );
-  }
 
   if (res.status === 204) return undefined as T;
 
@@ -132,7 +61,6 @@ export const api = {
   },
 };
 
-/** Extract a human-readable message from an API error for display in toasts. */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ApiRequestError) {
     const { body } = error;
@@ -148,7 +76,6 @@ export function getErrorMessage(error: unknown): string {
   return "Something went wrong.";
 }
 
-/** Extract per-field errors from DRF validation errors for use with react-hook-form. */
 export function getFieldErrors(error: unknown): Record<string, string> {
   if (!(error instanceof ApiRequestError)) return {};
   const result: Record<string, string> = {};
