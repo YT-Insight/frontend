@@ -1,0 +1,932 @@
+openapi: 3.0.3
+info:
+  title: YT Insight API
+  version: 1.0.0
+  description: YouTube channel analytics powered by AI.
+paths:
+  /api/analyses/:
+    get:
+      operationId: analyses_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - analyses
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAnalysisListList'
+          description: ''
+  /api/analyses/{id}/:
+    get:
+      operationId: analyses_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - analyses
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisDetail'
+          description: ''
+  /api/analyses/{id}/status/:
+    get:
+      operationId: analyses_status_retrieve
+      description: Lightweight endpoint for frontend polling while analysis is in
+        progress.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - analyses
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisStatus'
+          description: ''
+  /api/analyses/create/:
+    post:
+      operationId: analyses_create_create
+      tags:
+      - analyses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisInputRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AnalysisInputRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AnalysisInputRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisStatus'
+          description: ''
+  /api/auth/change-password/:
+    post:
+      operationId: auth_change_password_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangePasswordResponse'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: Blacklist the submitted refresh token so it can no longer be used.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+          description: ''
+    patch:
+      operationId: auth_me_partial_update
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+          description: ''
+  /api/auth/token/:
+    post:
+      operationId: auth_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/subscriptions/checkout/:
+    post:
+      operationId: subscriptions_checkout_create
+      tags:
+      - subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutResponse'
+          description: ''
+  /api/subscriptions/me/:
+    get:
+      operationId: subscriptions_me_retrieve
+      tags:
+      - subscriptions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionMeResponse'
+          description: ''
+  /api/subscriptions/plans/:
+    get:
+      operationId: subscriptions_plans_list
+      description: Public endpoint — returns plan tiers with pricing and features.
+      tags:
+      - subscriptions
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanTier'
+          description: ''
+  /api/subscriptions/portal/:
+    post:
+      operationId: subscriptions_portal_create
+      tags:
+      - subscriptions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingPortalResponse'
+          description: ''
+components:
+  schemas:
+    AnalysisDetail:
+      type: object
+      description: Full detail view including all AI-generated results.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        input_url:
+          type: string
+          format: uri
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AnalysisStatusEnum'
+          readOnly: true
+        videos_analyzed:
+          type: integer
+          readOnly: true
+        comments_analyzed:
+          type: integer
+          readOnly: true
+        error_message:
+          type: string
+          readOnly: true
+        channel:
+          allOf:
+          - $ref: '#/components/schemas/Channel'
+          readOnly: true
+        result:
+          allOf:
+          - $ref: '#/components/schemas/AnalysisResult'
+          readOnly: true
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisTopic'
+          readOnly: true
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisQuestion'
+          readOnly: true
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisSuggestion'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - channel
+      - comments_analyzed
+      - created_at
+      - error_message
+      - id
+      - input_url
+      - questions
+      - result
+      - status
+      - suggestions
+      - topics
+      - videos_analyzed
+    AnalysisInputRequest:
+      type: object
+      properties:
+        channel_url:
+          type: string
+          format: uri
+          minLength: 1
+      required:
+      - channel_url
+    AnalysisList:
+      type: object
+      description: Summary view for the list endpoint — no nested result data.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        input_url:
+          type: string
+          format: uri
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AnalysisStatusEnum'
+          readOnly: true
+        videos_analyzed:
+          type: integer
+          readOnly: true
+        comments_analyzed:
+          type: integer
+          readOnly: true
+        channel:
+          allOf:
+          - $ref: '#/components/schemas/Channel'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - channel
+      - comments_analyzed
+      - created_at
+      - id
+      - input_url
+      - status
+      - videos_analyzed
+    AnalysisQuestion:
+      type: object
+      properties:
+        question:
+          type: string
+          readOnly: true
+        answer:
+          type: string
+          readOnly: true
+        category:
+          allOf:
+          - $ref: '#/components/schemas/CategoryEnum'
+          readOnly: true
+      required:
+      - answer
+      - category
+      - question
+    AnalysisResult:
+      type: object
+      properties:
+        summary:
+          type: string
+          readOnly: true
+        sentiment:
+          allOf:
+          - $ref: '#/components/schemas/SentimentEnum'
+          readOnly: true
+        audience_type:
+          type: string
+          readOnly: true
+      required:
+      - audience_type
+      - sentiment
+      - summary
+    AnalysisStatus:
+      type: object
+      description: Lightweight — used for 202 response and polling.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/AnalysisStatusEnum'
+          readOnly: true
+        videos_analyzed:
+          type: integer
+          readOnly: true
+        comments_analyzed:
+          type: integer
+          readOnly: true
+        error_message:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - comments_analyzed
+      - created_at
+      - error_message
+      - id
+      - status
+      - videos_analyzed
+    AnalysisStatusEnum:
+      enum:
+      - pending
+      - processing
+      - completed
+      - failed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `processing` - Processing
+        * `completed` - Completed
+        * `failed` - Failed
+    AnalysisSuggestion:
+      type: object
+      properties:
+        suggestion:
+          type: string
+          readOnly: true
+        category:
+          allOf:
+          - $ref: '#/components/schemas/CategoryEnum'
+          readOnly: true
+      required:
+      - category
+      - suggestion
+    AnalysisTopic:
+      type: object
+      properties:
+        topic:
+          type: string
+          readOnly: true
+        relevance_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - relevance_score
+      - topic
+    BillingPortalResponse:
+      type: object
+      properties:
+        portal_url:
+          type: string
+          format: uri
+      required:
+      - portal_url
+    CategoryEnum:
+      enum:
+      - content
+      - engagement
+      - growth
+      - monetization
+      - audience
+      - custom
+      type: string
+      description: |-
+        * `content` - Content
+        * `engagement` - Engagement
+        * `growth` - Growth
+        * `monetization` - Monetization
+        * `audience` - Audience
+        * `custom` - Custom
+    ChangePasswordRequest:
+      type: object
+      properties:
+        old_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+      required:
+      - new_password
+      - old_password
+    ChangePasswordResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    Channel:
+      type: object
+      properties:
+        youtube_channel_id:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        thumbnail_url:
+          type: string
+          format: uri
+          readOnly: true
+        subscriber_count:
+          type: integer
+          readOnly: true
+        video_count:
+          type: integer
+          readOnly: true
+      required:
+      - description
+      - subscriber_count
+      - thumbnail_url
+      - title
+      - video_count
+      - youtube_channel_id
+    CheckoutRequestPlanEnum:
+      enum:
+      - basic
+      - pro
+      type: string
+      description: |-
+        * `basic` - basic
+        * `pro` - pro
+    CheckoutRequestRequest:
+      type: object
+      properties:
+        plan:
+          $ref: '#/components/schemas/CheckoutRequestPlanEnum'
+      required:
+      - plan
+    CheckoutResponse:
+      type: object
+      properties:
+        checkout_url:
+          type: string
+          format: uri
+      required:
+      - checkout_url
+    LogoutRequestRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    MeResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserProfile'
+        subscription:
+          $ref: '#/components/schemas/Subscription'
+        usage:
+          $ref: '#/components/schemas/UsageLimit'
+      required:
+      - subscription
+      - usage
+      - user
+    PaginatedAnalysisListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisList'
+    PatchedUserProfileRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 50
+        last_name:
+          type: string
+          maxLength: 50
+    PlanTier:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price_cents:
+          type: integer
+        price_display:
+          type: string
+        price_period:
+          type: string
+        video_limit:
+          type: integer
+        highlighted:
+          type: boolean
+        features:
+          type: array
+          items:
+            type: string
+      required:
+      - features
+      - highlighted
+      - id
+      - name
+      - price_cents
+      - price_display
+      - price_period
+      - video_limit
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        first_name:
+          type: string
+          maxLength: 50
+        last_name:
+          type: string
+          maxLength: 50
+      required:
+      - email
+      - password
+    RegisterResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    SentimentEnum:
+      enum:
+      - positive
+      - negative
+      - mixed
+      - neutral
+      type: string
+      description: |-
+        * `positive` - Positive
+        * `negative` - Negative
+        * `mixed` - Mixed
+        * `neutral` - Neutral
+    Subscription:
+      type: object
+      properties:
+        plan:
+          allOf:
+          - $ref: '#/components/schemas/SubscriptionPlanEnum'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/SubscriptionStatusEnum'
+          readOnly: true
+        current_period_end:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        stripe_subscription_id:
+          type: string
+          readOnly: true
+          nullable: true
+      required:
+      - current_period_end
+      - plan
+      - status
+      - stripe_subscription_id
+    SubscriptionMeResponse:
+      type: object
+      properties:
+        subscription:
+          $ref: '#/components/schemas/Subscription'
+        usage:
+          $ref: '#/components/schemas/UsageLimit'
+      required:
+      - subscription
+      - usage
+    SubscriptionPlanEnum:
+      enum:
+      - free
+      - basic
+      - pro
+      type: string
+      description: |-
+        * `free` - Free
+        * `basic` - Basic
+        * `pro` - Pro
+    SubscriptionStatusEnum:
+      enum:
+      - active
+      - canceled
+      - past_due
+      type: string
+      description: |-
+        * `active` - Active
+        * `canceled` - Canceled
+        * `past_due` - Past Due
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    UsageLimit:
+      type: object
+      properties:
+        video_analyzed:
+          type: integer
+          readOnly: true
+        video_limit:
+          type: integer
+          readOnly: true
+        reset_at:
+          type: string
+          format: date-time
+          readOnly: true
+        percentage_used:
+          type: integer
+          readOnly: true
+      required:
+      - percentage_used
+      - reset_at
+      - video_analyzed
+      - video_limit
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 50
+        last_name:
+          type: string
+          maxLength: 50
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - id
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
