@@ -47,14 +47,14 @@ export default function RegisterPage() {
   const handleOAuth = async (provider: "oauth_google" | "oauth_github") => {
     if (!signUp) return;
     setOauthLoading(provider === "oauth_google" ? "google" : "github");
-    try {
-      await signUp.sso({
-        strategy: provider,
-        redirectUrl: "/dashboard",
-        redirectCallbackUrl: `${window.location.origin}/sso-callback`,
-      });
-    } catch {
-      setError("OAuth sign-up failed. Please try again.");
+    const { error } = await signUp.sso({
+      strategy: provider,
+      redirectUrl: "/dashboard",
+      redirectCallbackUrl: `${window.location.origin}/sso-callback`,
+    });
+    if (error) {
+      console.error("Clerk OAuth error:", JSON.stringify(error, null, 2));
+      setError(error.message ?? "OAuth sign-up failed.");
       setOauthLoading(null);
     }
   };

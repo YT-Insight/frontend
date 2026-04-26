@@ -12,7 +12,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuth = useAuthStore((s) => s.clearAuth);
 
   useEffect(() => {
-    initApiAuth(() => getToken());
+    initApiAuth(() => getToken({ template: "default" }));
   }, [getToken]);
 
   useEffect(() => {

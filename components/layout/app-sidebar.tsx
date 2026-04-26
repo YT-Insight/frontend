@@ -107,38 +107,40 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {usage && subscription && (
-        <SidebarFooter className="group-data-[collapsible=icon]:hidden px-3 pb-4 gap-3">
-          <SidebarSeparator />
-          <div className="px-1 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Monthly usage</span>
-              <Badge
-                variant={PLAN_BADGE_VARIANT[subscription.plan] ?? "outline"}
-                className="text-xs capitalize h-4"
-              >
-                {subscription.plan}
-              </Badge>
+      <SidebarFooter className="group-data-[collapsible=icon]:hidden px-3 pb-4 gap-3">
+        {usage && subscription && (
+          <>
+            <SidebarSeparator />
+            <div className="px-1 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Monthly usage</span>
+                <Badge
+                  variant={PLAN_BADGE_VARIANT[subscription.plan] ?? "outline"}
+                  className="text-xs capitalize h-4"
+                >
+                  {subscription.plan}
+                </Badge>
+              </div>
+              <Progress value={usage.percentage_used} className="gap-1">
+                <ProgressTrack className="h-1.5">
+                  <ProgressIndicator
+                    className={cn(
+                      usage.percentage_used >= 90 && "bg-destructive",
+                      usage.percentage_used >= 70 &&
+                        usage.percentage_used < 90 &&
+                        "bg-yellow-500"
+                    )}
+                  />
+                </ProgressTrack>
+              </Progress>
+              <p className="text-xs text-muted-foreground">
+                {usage.video_analyzed} / {usage.video_limit} analyses
+              </p>
             </div>
-            <Progress value={usage.percentage_used} className="gap-1">
-              <ProgressTrack className="h-1.5">
-                <ProgressIndicator
-                  className={cn(
-                    usage.percentage_used >= 90 && "bg-destructive",
-                    usage.percentage_used >= 70 &&
-                      usage.percentage_used < 90 &&
-                      "bg-yellow-500"
-                  )}
-                />
-              </ProgressTrack>
-            </Progress>
-            <p className="text-xs text-muted-foreground">
-              {usage.video_analyzed} / {usage.video_limit} analyses
-            </p>
-          </div>
-          <UserNav />
-        </SidebarFooter>
-      )}
+          </>
+        )}
+        <UserNav />
+      </SidebarFooter>
     </Sidebar>
   );
 }

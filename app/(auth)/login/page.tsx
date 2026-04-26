@@ -41,14 +41,14 @@ export default function LoginPage() {
   const handleOAuth = async (provider: "oauth_google" | "oauth_github") => {
     if (!signIn) return;
     setOauthLoading(provider === "oauth_google" ? "google" : "github");
-    try {
-      await signIn.sso({
-        strategy: provider,
-        redirectUrl: "/dashboard",
-        redirectCallbackUrl: `${window.location.origin}/sso-callback`,
-      });
-    } catch {
-      setError("OAuth sign-in failed. Please try again.");
+    const { error } = await signIn.sso({
+      strategy: provider,
+      redirectUrl: "/dashboard",
+      redirectCallbackUrl: `${window.location.origin}/sso-callback`,
+    });
+    if (error) {
+      console.error("Clerk OAuth error:", JSON.stringify(error, null, 2));
+      setError(error.message ?? "OAuth sign-in failed.");
       setOauthLoading(null);
     }
   };
