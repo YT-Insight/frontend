@@ -78,6 +78,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm space-y-6">
+      <div id="clerk-captcha" />
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">Welcome back</h1>
         <p className="text-sm text-muted-foreground">Sign in to your YT Insight account</p>

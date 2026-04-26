@@ -151,6 +151,7 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full max-w-sm space-y-6">
+      <div id="clerk-captcha" />
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">Create your account</h1>
         <p className="text-sm text-muted-foreground">Start analyzing YouTube channels for free</p>

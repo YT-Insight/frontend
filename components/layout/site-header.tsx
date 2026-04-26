@@ -2,7 +2,10 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { UserNav } from "@/components/layout/user-nav";
+import { usePathname, useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -19,12 +22,27 @@ function getTitle(pathname: string): string {
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b px-4 bg-background/95 backdrop-blur-sm sticky top-0 z-10">
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b bg-background/95 backdrop-blur-sm sticky top-0 z-10 px-4">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="h-4" />
-      <h1 className="text-sm font-semibold">{getTitle(pathname)}</h1>
+      <span className="text-sm font-semibold flex-1">{getTitle(pathname)}</span>
+
+      <div className="flex items-center gap-2">
+        {pathname !== "/analyze" && (
+          <Button
+            size="sm"
+            className="h-8 gap-1.5 text-xs font-medium"
+            onClick={() => router.push("/analyze")}
+          >
+            <Plus className="size-3.5" />
+            <span className="hidden sm:inline">New Analysis</span>
+          </Button>
+        )}
+        <UserNav />
+      </div>
     </header>
   );
 }
